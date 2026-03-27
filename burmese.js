@@ -1,144 +1,202 @@
-// Burmese (Myanmar) Language Data
-const burmese = {
-    id: 'burmese',
-    name: 'Burmese',
-    native: 'မြန်မာ',
-    fontClass: 'burmese',
-    fontFamily: 'Noto Sans Myanmar',
-    
-    // Basic Consonants (K, S, T, P Groups) + Independent Vowels
-    consonants: [
-        { char: 'က', roman: 'ka', devanagari: 'क' },
-        { char: 'ခ', roman: 'kha', devanagari: 'ख' },
-        { char: 'ဂ', roman: 'ga', devanagari: 'ग' },
-        { char: 'ဃ', roman: 'gha', devanagari: 'घ' },
-        { char: 'င', roman: 'nga', devanagari: 'ङ' },
-        { char: 'ငြ', roman: 'ngra', devanagari: 'ङ' },
-        { char: 'ကျ', roman: 'kya', devanagari: 'च' },
-        { char: 'ကြ', roman: 'kra', devanagari: 'च' },
-        { char: 'ချ', roman: 'khya', devanagari: 'छ' },
-        { char: 'ခြ', roman: 'khra', devanagari: 'छ' },
-        { char: 'ဇ', roman: 'ja', devanagari: 'ज' },
-        { char: 'ဂျ', roman: 'gya', devanagari: 'ज' },
-        { char: 'ဈ', roman: 'jha', devanagari: 'झ' },
-        { char: 'ဂြ', roman: 'gra', devanagari: 'झ' },
-        { char: 'ဉ ', roman: 'nya', devanagari: 'ञ' },     // with trailing space (original)
-        { char: 'ဉ', roman: 'nya', devanagari: 'ञ' },      // FIX: without space — was leaking as U+1009
-        { char: 'ည', roman: 'nyya', devanagari: 'ञ' },
-        { char: 'ဋ', roman: 'ṭa', devanagari: 'ट' },
-        { char: 'ဌ', roman: 'ṭha', devanagari: 'ठ' },
-        { char: 'ဍ', roman: 'ḍa', devanagari: 'ड' },
-        { char: 'ဎ', roman: 'ḍha', devanagari: 'ढ' },
-        { char: 'ဏ', roman: 'ṇa', devanagari: 'ण' },
-        { char: 'တ', roman: 'ta', devanagari: 'त' },
-        { char: 'ထ', roman: 'tha', devanagari: 'थ' },
-        { char: 'သ', roman: 'sa', devanagari: 'थ' },
-        { char: 'ဒ', roman: 'da', devanagari: 'द' },
-        { char: 'ဓ', roman: 'dha', devanagari: 'ध' },
-        { char: 'န', roman: 'na', devanagari: 'न' },
-        { char: 'ပ', roman: 'pa', devanagari: 'प' },
-        { char: 'ဖ', roman: 'pha', devanagari: 'फ' },
-        { char: 'ဗ', roman: 'ba', devanagari: 'ब' },
-        { char: 'ဘ', roman: 'bha', devanagari: 'भ' },
-        { char: 'မ', roman: 'ma', devanagari: 'म' },
-        { char: 'ယ', roman: 'ya', devanagari: 'य' },
-        { char: 'ရ', roman: 'ra', devanagari: 'र' },
-        { char: 'လ', roman: 'la', devanagari: 'ल' },
-        { char: 'ဝ', roman: 'wa', devanagari: 'व' },
-        { char: 'ရှ', roman: 'sha', devanagari: 'श' },
-        { char: 'စ', roman: 'ca', devanagari: 'स' },
-        { char: 'ဆ', roman: 'cha', devanagari: 'स' },
-        { char: 'ဿ', roman: 'ssa', devanagari: 'स्स' },
-        { char: 'ဟ', roman: 'ha', devanagari: 'ह' },
-        { char: 'ဠ', roman: 'ḷa', devanagari: 'ळ' },
-        { char: 'အ', roman: 'a', devanagari: 'अ' },
-        // === Independent Vowels (FIX: were missing, causing leaks) ===
-        { char: 'ဥ', roman: 'u', devanagari: 'उ' },       // U+1025 — leaked in Egg, Yogurt, Carrot, Vinegar
-        { char: 'ဦ', roman: 'ū', devanagari: 'ऊ' },       // U+1026 — leaked in Head, Spring, Autumn, Winter
-        { char: 'ဧ', roman: 'e', devanagari: 'ए' },       // U+1027 — leaked in April
-        { char: 'ဣ', roman: 'i', devanagari: 'इ' },       // U+1023 — independent i (preemptive)
-        { char: 'ဤ', roman: 'ī', devanagari: 'ई' },       // U+1024 — independent ii (preemptive)
-        { char: 'ဩ', roman: 'o', devanagari: 'ओ' },       // U+1029 — independent o (preemptive)
-        { char: 'ဪ', roman: 'au', devanagari: 'औ' },      // U+102A — independent au (preemptive)
-    ],
+// ═══ BURMESE TRANSLITERATION ENGINE ═══
+// Uses character-by-character mapping with longest-match-first
+// Source: burmese.js consonant/vowel/medial/final/combination tables
 
-    // Vowel signs (dependent vowels/matras)
-    vowels: [
-        { char: 'ါ', roman: 'ā', devanagari: 'ा', name: 'aa' },
-        { char: 'ာ', roman: 'ā', devanagari: 'ा', name: 'aa-alt' },
-        { char: 'ိ', roman: 'i', devanagari: 'ि', name: 'i' },
-        { char: 'ီ', roman: 'ī', devanagari: 'ी', name: 'ii' },
-        { char: 'ု', roman: 'u', devanagari: 'ु', name: 'u' },
-        { char: 'ူ', roman: 'ū', devanagari: 'ू', name: 'uu' },
-        { char: 'ေ', roman: 'e', devanagari: 'े', name: 'e' },
-        { char: 'ဲ', roman: 'ai', devanagari: 'ै', name: 'ai' },
-        { char: 'ော', roman: 'o', devanagari: 'ो', name: 'o' },
-        { char: 'ို', roman: 'o', devanagari: 'ो', name: 'o-alt' }
-    ],
+// ─── CHARACTER TABLES ───
 
-    // Medial consonants
-    medials: [
-        { char: 'ျ', roman: 'y', devanagari: '्य', name: 'ya-medial' },
-        { char: 'ြ', roman: 'y', devanagari: '्य', name: 'ya-medial' },
-        { char: 'ွ', roman: 'w', devanagari: '्व', name: 'wa-medial' },
-        { char: 'ှ', roman: 'h', devanagari: '्ह', name: 'ha-medial' }
-    ],
+const CONSONANTS = [
+  { char: 'က', roman: 'ka', dev: 'क' },
+  { char: 'ခ', roman: 'kha', dev: 'ख' },
+  { char: 'ဂ', roman: 'ga', dev: 'ग' },
+  { char: 'ဃ', roman: 'gha', dev: 'घ' },
+  { char: 'င', roman: 'nga', dev: 'ङ' },
+  { char: 'ငြ', roman: 'ngra', dev: 'ङ' },
+  { char: 'ကျ', roman: 'kya', dev: 'च' },
+  { char: 'ကြ', roman: 'kra', dev: 'च' },
+  { char: 'ချ', roman: 'khya', dev: 'छ' },
+  { char: 'ခြ', roman: 'khra', dev: 'छ' },
+  { char: 'ဇ', roman: 'ja', dev: 'ज' },
+  { char: 'ဂျ', roman: 'gya', dev: 'ज' },
+  { char: 'ဈ', roman: 'jha', dev: 'झ' },
+  { char: 'ဂြ', roman: 'gra', dev: 'झ' },
+  { char: 'ဉ ', roman: 'nya', dev: 'ञ' },
+  { char: 'ဉ', roman: 'nya', dev: 'ञ' },
+  { char: 'ည', roman: 'nyya', dev: 'ञ' },
+  { char: 'ဋ', roman: 'ṭa', dev: 'ट' },
+  { char: 'ဌ', roman: 'ṭha', dev: 'ठ' },
+  { char: 'ဍ', roman: 'ḍa', dev: 'ड' },
+  { char: 'ဎ', roman: 'ḍha', dev: 'ढ' },
+  { char: 'ဏ', roman: 'ṇa', dev: 'ण' },
+  { char: 'တ', roman: 'ta', dev: 'त' },
+  { char: 'ထ', roman: 'tha', dev: 'थ' },
+  { char: 'သ', roman: 'sa', dev: 'थ' },
+  { char: 'ဒ', roman: 'da', dev: 'द' },
+  { char: 'ဓ', roman: 'dha', dev: 'ध' },
+  { char: 'န', roman: 'na', dev: 'न' },
+  { char: 'ပ', roman: 'pa', dev: 'प' },
+  { char: 'ဖ', roman: 'pha', dev: 'फ' },
+  { char: 'ဗ', roman: 'ba', dev: 'ब' },
+  { char: 'ဘ', roman: 'bha', dev: 'भ' },
+  { char: 'မ', roman: 'ma', dev: 'म' },
+  { char: 'ယ', roman: 'ya', dev: 'य' },
+  { char: 'ရ', roman: 'ra', dev: 'र' },
+  { char: 'လ', roman: 'la', dev: 'ल' },
+  { char: 'ဝ', roman: 'wa', dev: 'व' },
+  { char: 'ရှ', roman: 'sha', dev: 'श' },
+  { char: 'စ', roman: 'ca', dev: 'स' },
+  { char: 'ဆ', roman: 'cha', dev: 'स' },
+  { char: 'ဿ', roman: 'ssa', dev: 'स्स' },
+  { char: 'ဟ', roman: 'ha', dev: 'ह' },
+  { char: 'ဠ', roman: 'ḷa', dev: 'ळ' },
+  { char: 'အ', roman: 'a', dev: 'अ' },
+  // Independent vowels
+  { char: 'ဥ', roman: 'u', dev: 'उ' },
+  { char: 'ဦ', roman: 'ū', dev: 'ऊ' },
+  { char: 'ဧ', roman: 'e', dev: 'ए' },
+  { char: 'ဣ', roman: 'i', dev: 'इ' },
+  { char: 'ဤ', roman: 'ī', dev: 'ई' },
+  { char: 'ဩ', roman: 'o', dev: 'ओ' },
+  { char: 'ဪ', roman: 'au', dev: 'औ' },
+];
 
-    // Final consonant markers
-    finals: [
-        { char: '်', roman: '', devanagari: '्', name: 'asat/virama' },
-        { char: 'ံ', roman: 'ṃ', devanagari: 'ं', name: 'anusvara' },
-        { char: '့', roman: '', devanagari: '\u200B', name: 'dot-below' },  // FIX: U+1037 — map to zero-width space (consumed but invisible). Was '' which left the Myanmar char in output.
-        { char: 'း', roman: 'ḥ', devanagari: 'ः', name: 'visarga' },
-        // === FIX: Missing markers ===
-        { char: '္', roman: '', devanagari: '्', name: 'stacked/virama' }, // U+1039 — stacked consonant marker → Devanagari virama. Leaked in Orange, Taxi, etc.
-        { char: '။', roman: '.', devanagari: '।', name: 'fullstop' },      // U+104B — Myanmar full stop → Devanagari danda. Leaked in 17 sentence-type words.
-        { char: '၊', roman: ',', devanagari: ',', name: 'comma' },          // U+104A — Myanmar comma (preemptive)
-    ],
+const VOWELS = [
+  { char: 'ါ', roman: 'ā', dev: 'ा' },
+  { char: 'ာ', roman: 'ā', dev: 'ा' },
+  { char: 'ိ', roman: 'i', dev: 'ि' },
+  { char: 'ီ', roman: 'ī', dev: 'ी' },
+  { char: 'ု', roman: 'u', dev: 'ु' },
+  { char: 'ူ', roman: 'ū', dev: 'ू' },
+  { char: 'ေ', roman: 'e', dev: 'े' },
+  { char: 'ဲ', roman: 'ai', dev: 'ै' },
+  { char: 'ော', roman: 'o', dev: 'ो' },
+  { char: 'ို', roman: 'o', dev: 'ो' },
+];
 
-    // Common combined forms (for more accurate conversion)
-    combinations: [
-        { char: 'ောင်', roman: 'aung', devanagari: 'ौंग्' },
-        { char: 'ိုင်', roman: 'aing', devanagari: 'ैंग्' },
-        { char: 'ောက်', roman: 'auk', devanagari: 'ौक्' },
-        { char: 'ိုက်', roman: 'aik', devanagari: 'ैक्' },
-        { char: 'ုံ', roman: 'un', devanagari: 'ुं' },
-        { char: 'ိန်', roman: 'in', devanagari: 'िन्' },
-        { char: 'ိမ်', roman: 'im', devanagari: 'िम्' },
-        { char: 'ိတ်', roman: 'it', devanagari: 'ित्' },
-        { char: 'ိပ်', roman: 'ip', devanagari: 'िप्' },
-        { char: 'ိက်', roman: 'ik', devanagari: 'िक्' },
-        { char: 'ုတ်', roman: 'ut', devanagari: 'ुत्' },
-        { char: 'ုပ်', roman: 'up', devanagari: 'ुप्' },
-        { char: 'ုက်', roman: 'uk', devanagari: 'ुक्' },
-        { char: 'န်', roman: 'n', devanagari: 'न्' },
-        { char: 'မ်', roman: 'm', devanagari: 'म्' },
-        { char: 'တ်', roman: 't', devanagari: 'त्' },
-        { char: 'ပ်', roman: 'p', devanagari: 'प्' },
-        { char: 'က်', roman: 'k', devanagari: 'क्' },
-        { char: 'င်', roman: 'ng', devanagari: 'ं' },
-        { char: 'င်္', roman: 'ng', devanagari: 'ं' },
-        { char: 'ွန်', roman: 'un', devanagari: 'ुन', name: 'un' },
-        { char: 'ုန်', roman: 'on', devanagari: 'ोन', name: 'on' },
-        // === FIX: Stacked consonant combinations (္ + consonant) ===
-        { char: '္မ', roman: 'mma', devanagari: '्म', name: 'stacked-ma' },  // For လိမ္မော် (Orange)
-        { char: '္က', roman: 'kka', devanagari: '्क', name: 'stacked-ka' },  // For တက္ကစီ (Taxi)
-        { char: '္စ', roman: 'cca', devanagari: '्स', name: 'stacked-ca' },
-        { char: '္ခ', roman: 'kkha', devanagari: '्ख', name: 'stacked-kha' },
-        { char: '္ဂ', roman: 'gga', devanagari: '्ग', name: 'stacked-ga' },
-        { char: '္တ', roman: 'tta', devanagari: '्त', name: 'stacked-ta' },
-        { char: '္ဒ', roman: 'dda', devanagari: '्द', name: 'stacked-da' },
-        { char: '္ပ', roman: 'ppa', devanagari: '्प', name: 'stacked-pa' },
-        { char: '္ဗ', roman: 'bba', devanagari: '्ब', name: 'stacked-ba' },
-        { char: '္န', roman: 'nna', devanagari: '्न', name: 'stacked-na' },
-        { char: '္လ', roman: 'lla', devanagari: '्ल', name: 'stacked-la' },
-        { char: '္သ', roman: 'ssa', devanagari: '्थ', name: 'stacked-sa' },
-    ],
+const MEDIALS = [
+  { char: 'ျ', roman: 'y', dev: '्य' },
+  { char: 'ြ', roman: 'y', dev: '्य' },
+  { char: 'ွ', roman: 'w', dev: '्व' },
+  { char: 'ှ', roman: 'h', dev: '्ह' },
+];
 
-    hasDevanagari: true
-};
+const FINALS = [
+  { char: '်', roman: '', dev: '्' },
+  { char: 'ံ', roman: 'ṃ', dev: 'ं' },
+  { char: '့', roman: '', dev: '\u200B' },
+  { char: 'း', roman: 'ḥ', dev: 'ः' },
+  { char: '္', roman: '', dev: '्' },
+  { char: '။', roman: '.', dev: '।' },
+  { char: '၊', roman: ',', dev: ',' },
+];
 
-// Make it available globally (for non-module usage)
-if (typeof window !== 'undefined') {
-    window.burmese = burmese;
+const COMBINATIONS = [
+  { char: 'ောင်', dev: 'ौंग्' },
+  { char: 'ိုင်', dev: 'ैंग्' },
+  { char: 'ောက်', dev: 'ौक्' },
+  { char: 'ိုက်', dev: 'ैक्' },
+  { char: 'ုံ', dev: 'ुं' },
+  { char: 'ိန်', dev: 'िन्' },
+  { char: 'ိမ်', dev: 'िम्' },
+  { char: 'ိတ်', dev: 'ित्' },
+  { char: 'ိပ်', dev: 'िप्' },
+  { char: 'ိက်', dev: 'िक्' },
+  { char: 'ုတ်', dev: 'ुत्' },
+  { char: 'ုပ်', dev: 'ुप्' },
+  { char: 'ုက်', dev: 'ुक्' },
+  { char: 'န်', dev: 'न्' },
+  { char: 'မ်', dev: 'म्' },
+  { char: 'တ်', dev: 'त्' },
+  { char: 'ပ်', dev: 'प्' },
+  { char: 'က်', dev: 'क्' },
+  { char: 'င်', dev: 'ं' },
+  { char: 'င်္', dev: 'ं' },
+  { char: 'ွန်', dev: 'ुन' },
+  { char: 'ုန်', dev: 'ोन' },
+  // Stacked consonant combinations
+  { char: '္မ', dev: '्म' },
+  { char: '္က', dev: '्क' },
+  { char: '္စ', dev: '्स' },
+  { char: '္ခ', dev: '्ख' },
+  { char: '္ဂ', dev: '्ग' },
+  { char: '္တ', dev: '्त' },
+  { char: '္ဒ', dev: '्द' },
+  { char: '္ပ', dev: '्प' },
+  { char: '္ဗ', dev: '्ब' },
+  { char: '္န', dev: '्न' },
+  { char: '္လ', dev: '्ल' },
+  { char: '္သ', dev: '्थ' },
+];
+
+// ─── BUILD LOOKUP (longest-match-first) ───
+
+const allMappings = {};
+
+// Add combinations first (they are multi-char sequences)
+for (const c of COMBINATIONS) allMappings[c.char] = c.dev;
+// Add consonants (some are multi-char like ကျ, ကြ, ရှ)
+for (const c of CONSONANTS) allMappings[c.char] = c.dev;
+// Add vowels
+for (const v of VOWELS) allMappings[v.char] = v.dev;
+// Add medials
+for (const m of MEDIALS) allMappings[m.char] = m.dev;
+// Add finals
+for (const f of FINALS) allMappings[f.char] = f.dev;
+
+// Sort keys longest first for greedy matching
+const sortedKeys = Object.keys(allMappings).sort((a, b) => b.length - a.length);
+
+// ─── TRANSLITERATION FUNCTION ───
+
+export function toDev(burmese) {
+  if (!burmese) return '';
+  let result = '';
+  let i = 0;
+  const text = burmese.trim();
+
+  while (i < text.length) {
+    let matched = false;
+    for (const key of sortedKeys) {
+      if (text.startsWith(key, i)) {
+        result += allMappings[key];
+        i += key.length;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      // Pass through non-Myanmar characters (spaces, numbers, etc.)
+      result += text[i];
+      i++;
+    }
+  }
+  return result;
+}
+
+// ─── SYLLABLE BREAKDOWN ───
+
+export function breakSyllables(word) {
+  if (!word) return [];
+  const syllables = [];
+  let current = '';
+
+  for (let i = 0; i < word.length; i++) {
+    const ch = word[i];
+    const code = ch.charCodeAt(0);
+
+    // Myanmar consonant range: U+1000 - U+1021
+    if (code >= 0x1000 && code <= 0x1021 && current.length > 0) {
+      const next = word[i + 1];
+      const nextCode = next ? next.charCodeAt(0) : 0;
+      // Don't split if next is a medial
+      const isMedial = nextCode >= 0x103B && nextCode <= 0x103E;
+      if (!current.endsWith('်') && !isMedial) {
+        syllables.push(current);
+        current = ch;
+        continue;
+      }
+    }
+    current += ch;
+  }
+  if (current) syllables.push(current);
+  return syllables;
 }
