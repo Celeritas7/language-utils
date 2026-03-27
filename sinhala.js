@@ -6,36 +6,45 @@ const sinhala = {
     fontClass: 'sinhala',
     fontFamily: 'Noto Sans Sinhala',
 
-    // Basic Consonants (mapped from Excel: Sinhala → Devanagari → Roman)
+    // Basic Consonants + Independent Vowels
+    // Independent vowels are included here so buildConverter() picks them up.
+    // buildConverter only reads: consonants, vowels, medials, finals, combinations.
     consonants: [
+        // === Ka-group ===
         { char: 'ක', roman: 'ka', devanagari: 'क' },
         { char: 'ඛ', roman: 'kha', devanagari: 'ख' },
         { char: 'ග', roman: 'ga', devanagari: 'ग' },
         { char: 'ඝ', roman: 'gha', devanagari: 'घ' },
         { char: 'ඞ', roman: 'nga', devanagari: 'ङ' },
+        { char: 'ඟ', roman: 'ṅga', devanagari: 'ंग' },  // Prenasalized nga (U+0D9F) — was missing
+        // === Cha-group ===
         { char: 'ච', roman: 'cha', devanagari: 'च' },
         { char: 'ඡ', roman: 'chha', devanagari: 'छ' },
         { char: 'ජ', roman: 'ja', devanagari: 'ज' },
         { char: 'ඣ', roman: 'jha', devanagari: 'झ' },
         { char: 'ඤ', roman: 'nya', devanagari: 'ञ' },
+        // === Ta-group (retroflex) ===
         { char: 'ට', roman: 'ṭa', devanagari: 'ट' },
         { char: 'ඨ', roman: 'ṭha', devanagari: 'ठ' },
         { char: 'ඩ', roman: 'ḍa', devanagari: 'ड' },
         { char: 'ඪ', roman: 'ḍha', devanagari: 'ढ' },
         { char: 'ණ', roman: 'ṇa', devanagari: 'ण' },
+        // === Ta-group (dental) ===
         { char: 'ත', roman: 'ta', devanagari: 'त' },
         { char: 'ථ', roman: 'tha', devanagari: 'थ' },
         { char: 'ද', roman: 'da', devanagari: 'द' },
-        { char: 'ඳ', roman: 'nda', devanagari: 'ंद' },
+        { char: 'ඳ', roman: 'nda', devanagari: 'ंद' },   // Prenasalized
         { char: 'ධ', roman: 'dha', devanagari: 'ध' },
         { char: 'න', roman: 'na', devanagari: 'न' },
+        // === Pa-group ===
         { char: 'ප', roman: 'pa', devanagari: 'प' },
         { char: 'ඵ', roman: 'pha', devanagari: 'फ' },
         { char: 'ෆ', roman: 'fa', devanagari: 'फ' },
         { char: 'බ', roman: 'ba', devanagari: 'ब' },
-        { char: 'ඹ', roman: 'mba', devanagari: 'ंब' },
+        { char: 'ඹ', roman: 'mba', devanagari: 'ंब' },   // Prenasalized
         { char: 'භ', roman: 'bha', devanagari: 'भ' },
         { char: 'ම', roman: 'ma', devanagari: 'म' },
+        // === Semi-vowels & sibilants ===
         { char: 'ය', roman: 'ya', devanagari: 'य' },
         { char: 'ර', roman: 'ra', devanagari: 'र' },
         { char: 'ල', roman: 'la', devanagari: 'ल' },
@@ -45,12 +54,28 @@ const sinhala = {
         { char: 'ස', roman: 'sa', devanagari: 'स' },
         { char: 'හ', roman: 'ha', devanagari: 'ह' },
         { char: 'ළ', roman: 'ḷa', devanagari: 'ळ' },
-        { char: 'ක්ෂ', roman: 'ksha', devanagari: 'क्ष' },
-        { char: 'ඥ', roman: 'dnya', devanagari: 'ज्ञ' },
-        { char: 'අ', roman: 'a', devanagari: 'अ' },
+        // === Independent Vowels (standalone, word-initial) ===
+        // Longer forms MUST come before shorter ones for greedy matching.
+        // buildConverter sorts by length anyway, but keeping order clear.
+        { char: 'ආ', roman: 'ā', devanagari: 'आ' },
+        { char: 'ඈ', roman: 'ǣ', devanagari: 'ॲ' },     // Long æ
+        { char: 'ඉ', roman: 'i', devanagari: 'इ' },
+        { char: 'ඊ', roman: 'ī', devanagari: 'ई' },
+        { char: 'උ', roman: 'u', devanagari: 'उ' },
+        { char: 'ඌ', roman: 'ū', devanagari: 'ऊ' },
+        { char: 'ඍ', roman: 'ṛ', devanagari: 'ऋ' },      // Vocalic r (U+0D8D) — was missing
+        { char: 'ඎ', roman: 'ṝ', devanagari: 'ॠ' },      // Long vocalic r
+        { char: 'එ', roman: 'e', devanagari: 'ए' },
+        { char: 'ඒ', roman: 'ē', devanagari: 'ए' },
+        { char: 'ඇ', roman: 'æ', devanagari: 'ॲ' },
+        { char: 'ඓ', roman: 'ai', devanagari: 'ऐ' },
+        { char: 'ඔ', roman: 'o', devanagari: 'ओ' },
+        { char: 'ඕ', roman: 'ō', devanagari: 'ओ' },
+        { char: 'ඖ', roman: 'au', devanagari: 'औ' },
+        { char: 'අ', roman: 'a', devanagari: 'अ' },       // Short a — LAST (shortest match)
     ],
 
-    // Vowel signs (dependent vowels/matras) — from Intermediate sheet
+    // Vowel signs (dependent vowels/matras — attached to consonants)
     vowels: [
         { char: 'ා', roman: 'ā', devanagari: 'ा', name: 'aa' },
         { char: 'ි', roman: 'i', devanagari: 'ि', name: 'i' },
@@ -70,22 +95,7 @@ const sinhala = {
         { char: 'ෲ', roman: 'rū', devanagari: 'ॄ', name: 'ruu' },
     ],
 
-    // Independent vowels (for standalone usage)
-    independentVowels: [
-        { char: 'අ', roman: 'a', devanagari: 'अ' },
-        { char: 'ආ', roman: 'ā', devanagari: 'आ' },
-        { char: 'ඉ', roman: 'i', devanagari: 'इ' },
-        { char: 'ඊ', roman: 'ī', devanagari: 'ई' },
-        { char: 'උ', roman: 'u', devanagari: 'उ' },
-        { char: 'ඌ', roman: 'ū', devanagari: 'ऊ' },
-        { char: 'එ', roman: 'e', devanagari: 'ए' },
-        { char: 'ඒ', roman: 'ē', devanagari: 'ए' },
-        { char: 'ඇ', roman: 'æ', devanagari: 'ॲ' },
-        { char: 'ඔ', roman: 'o', devanagari: 'ओ' },
-        { char: 'ඕ', roman: 'ō', devanagari: 'ओ' },
-    ],
-
-    // Medial consonants (not applicable in Sinhala like Burmese, but keeping structure)
+    // Medial consonants (not applicable in Sinhala)
     medials: [],
 
     // Final consonant markers and special signs
@@ -96,14 +106,11 @@ const sinhala = {
         { char: 'ඃ', roman: 'ḥ', devanagari: 'ः', name: 'visarga' },
     ],
 
-    // Common combined forms (for more accurate conversion)
+    // Common combined forms (longer sequences matched first for accuracy)
     combinations: [
         // Conjunct consonants
         { char: 'ක්ෂ', roman: 'ksha', devanagari: 'क्ष' },
         { char: 'ඥ', roman: 'dnya', devanagari: 'ज्ञ' },
-        // Prenasalized stops (unique to Sinhala)
-        { char: 'ඳ', roman: 'nda', devanagari: 'ंद' },
-        { char: 'ඹ', roman: 'mba', devanagari: 'ंब' },
     ],
 
     hasDevanagari: true
