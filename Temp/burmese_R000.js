@@ -1,11 +1,11 @@
 // Burmese (Myanmar) Language Data
-export const burmese = {
+const burmese = {
     id: 'burmese',
     name: 'Burmese',
     native: 'မြန်မာ',
     fontClass: 'burmese',
     fontFamily: 'Noto Sans Myanmar',
-
+    
     // Basic Consonants (K, S, T, P Groups)
     consonants: [
         { char: 'က', roman: 'ka', devanagari: 'क' },
@@ -53,63 +53,66 @@ export const burmese = {
         { char: 'အ', roman: 'a', devanagari: 'अ' }
     ],
 
-    medials: [
-        { char: 'ျ', roman: 'ya', devanagari: '्य' },
-        { char: 'ြ', roman: 'ra', devanagari: '्य' },
-        { char: 'ွ', roman: 'wa', devanagari: '्व' },
-        { char: 'ှ', roman: 'ha', devanagari: '्ह' }
+    // Vowel signs (dependent vowels/matras)
+    vowels: [
+        { char: 'ါ', roman: 'ā', devanagari: 'ा', name: 'aa' },
+        { char: 'ာ', roman: 'ā', devanagari: 'ा', name: 'aa-alt' },
+        { char: 'ိ', roman: 'i', devanagari: 'ि', name: 'i' },
+        { char: 'ီ', roman: 'ī', devanagari: 'ी', name: 'ii' },
+        { char: 'ု', roman: 'u', devanagari: 'ु', name: 'u' },
+        { char: 'ူ', roman: 'ū', devanagari: 'ू', name: 'uu' },
+        { char: 'ေ', roman: 'e', devanagari: 'े', name: 'e' },
+        { char: 'ဲ', roman: 'ai', devanagari: 'ै', name: 'ai' },
+        { char: 'ော', roman: 'o', devanagari: 'ो', name: 'o' },
+        { char: 'ို', roman: 'o', devanagari: 'ो', name: 'o-alt' }
     ],
 
+    // Medial consonants
+    medials: [
+        { char: 'ျ', roman: 'y', devanagari: '्य', name: 'ya-medial' },
+        { char: 'ြ', roman: 'y', devanagari: '्य', name: 'ya-medial' },
+        { char: 'ွ', roman: 'w', devanagari: '्व', name: 'wa-medial' },
+        { char: 'ှ', roman: 'h', devanagari: '्ह', name: 'ha-medial' }
+    ],
+
+    // Final consonant markers
     finals: [
+        { char: '်', roman: '', devanagari: '्', name: 'asat/virama' },
+        { char: 'ံ', roman: 'ṃ', devanagari: 'ं', name: 'anusvara' },
+        { char: '့', roman: '', devanagari: '', name: 'visarga-like' },
+        { char: 'း', roman: 'ḥ', devanagari: 'ः', name: 'visarga' }
+    ],
+
+    // Common combined forms (for more accurate conversion)
+    combinations: [
+        { char: 'ောင်', roman: 'aung', devanagari: 'ौंग्' },
+        { char: 'ိုင်', roman: 'aing', devanagari: 'ैंग्' },
+        { char: 'ောက်', roman: 'auk', devanagari: 'ौक्' },
+        { char: 'ိုက်', roman: 'aik', devanagari: 'ैक्' },
+        { char: 'ုံ', roman: 'un', devanagari: 'ुं' },
+        { char: 'ိန်', roman: 'in', devanagari: 'िन्' },
+        { char: 'ိမ်', roman: 'im', devanagari: 'िम्' },
+        { char: 'ိတ်', roman: 'it', devanagari: 'ित्' },
+        { char: 'ိပ်', roman: 'ip', devanagari: 'िप्' },
+        { char: 'ိက်', roman: 'ik', devanagari: 'िक्' },
+        { char: 'ုတ်', roman: 'ut', devanagari: 'ुत्' },
+        { char: 'ုပ်', roman: 'up', devanagari: 'ुप्' },
+        { char: 'ုက်', roman: 'uk', devanagari: 'ुक्' },
+        { char: 'န်', roman: 'n', devanagari: 'न्' },
+        { char: 'မ်', roman: 'm', devanagari: 'म्' },
+        { char: 'တ်', roman: 't', devanagari: 'त्' },
+        { char: 'ပ်', roman: 'p', devanagari: 'प्' },
         { char: 'က်', roman: 'k', devanagari: 'क्' },
         { char: 'င်', roman: 'ng', devanagari: 'ं' },
         { char: 'င်္', roman: 'ng', devanagari: 'ं' },
-        { char: 'စ်', roman: 'c', devanagari: 'च्' },
-        { char: 'ည်', roman: 'ny', devanagari: 'ञ्' },
-        { char: 'တ်', roman: 't', devanagari: 'त्' },
-        { char: 'န်', roman: 'n', devanagari: 'न्' },
-        { char: 'ပ်', roman: 'p', devanagari: 'प्' },
-        { char: 'မ်', roman: 'm', devanagari: 'म्' },
-        { char: 'ယ်', roman: 'y', devanagari: 'य्' },
-        { char: 'သ်', roman: 's', devanagari: 'स्' }
-    ],
-
-    markers: [
-        { char: '်', roman: '', devanagari: '्' },
-        { char: '့', roman: '.', devanagari: '॰' },
-        { char: 'း', roman: ':', devanagari: 'ः' },
-        { char: '္', roman: '', devanagari: '्' }
-    ],
-
-    // Vowels for future use
-    vowels: [
-        { char: 'ာ', roman: 'ā', devanagari: 'ा' },
-        { char: 'ိ', roman: 'i', devanagari: 'ि' },
-        { char: 'ီ', roman: 'ī', devanagari: 'ी' },
-        { char: 'ု', roman: 'u', devanagari: 'ु' },
-        { char: 'ူ', roman: 'ū', devanagari: 'ू' },
-        { char: 'ေ', roman: 'e', devanagari: 'े' },
-        { char: 'ဲ', roman: 'ai', devanagari: 'ै' },
-        { char: 'ော', roman: 'o', devanagari: 'ो' },
-        { char: 'ော်', roman: 'au', devanagari: 'ौ' },
-        { char: 'ါ', roman: 'a', devanagari: 'ा' },
-        { char: 'ာ', roman: 'a', devanagari: 'ा' },
-        { char: 'ိ', roman: 'i', devanagari: 'ि' },
-        { char: 'ီ', roman: 'i', devanagari: 'ी' },
-        { char: 'ု', roman: 'u', devanagari: 'ु' },
-        { char: 'ူ', roman: 'u', devanagari: 'ू' },
-        { char: 'ေ', roman: 'e', devanagari: 'े' },
-        { char: 'ဲ', roman: 'ai', devanagari: 'ै' },
-        { char: 'ော', roman: 'o', devanagari: 'ो' },
-        { char: 'ို', roman: 'o', devanagari: 'ो' },
         { char: 'ွန်', roman: 'un', devanagari: 'ुन', name: 'un' },
         { char: 'ုန်', roman: 'on', devanagari: 'ोन', name: 'on' }
     ],
 
-    // Language-specific helper methods
-    getDisplayLabel(charData) {
-        return charData.devanagari || charData.roman;
-    },
-
     hasDevanagari: true
 };
+
+// Make it available globally (for non-module usage)
+if (typeof window !== 'undefined') {
+    window.burmese = burmese;
+}
