@@ -39,7 +39,7 @@ const CONSONANTS = [
   { char: 'ဘ', roman: 'bha', dev: 'भ' },
   { char: 'မ', roman: 'ma', dev: 'म' },
   { char: 'ယ', roman: 'ya', dev: 'य' },
-  { char: 'ရ', roman: 'ya', dev: 'य' },
+  { char: 'ရ', roman: 'ra', dev: 'र' },
   { char: 'လ', roman: 'la', dev: 'ल' },
   { char: 'ဝ', roman: 'wa', dev: 'व' },
   { char: 'ရှ', roman: 'sha', dev: 'श' },
@@ -147,7 +147,7 @@ const sortedKeys = Object.keys(allMappings).sort((a, b) => b.length - a.length);
 
 // ─── TRANSLITERATION FUNCTION ───
 
-export function toDev(burmese, isLoanword = false) {
+export function toDev(burmese) {
   if (!burmese) return '';
   let result = '';
   let i = 0;
@@ -157,11 +157,7 @@ export function toDev(burmese, isLoanword = false) {
     let matched = false;
     for (const key of sortedKeys) {
       if (text.startsWith(key, i)) {
-        let dev = allMappings[key];
-        // Loanwords: standalone ရ → र (English r sound)
-        // Native words keep default ရ → य
-        if (isLoanword && key === 'ရ') dev = 'र';
-        result += dev;
+        result += allMappings[key];
         i += key.length;
         matched = true;
         break;
