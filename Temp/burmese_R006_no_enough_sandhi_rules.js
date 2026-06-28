@@ -113,10 +113,6 @@ const COMBINATIONS = [
   { char: 'င်္', dev: 'ं' },
   { char: 'ွန်', dev: 'ुन' },
   { char: 'ုန်', dev: 'ोन' },
-  // Vocalic finals — a killed consonant that is really a vowel, not a coda
-  { char: 'ည်', dev: 'ी' },   // ‑ည် ≈ [i]  (ချည် chi, ကြည် kyi)
-  { char: 'ဉ်', dev: 'ी' },   // ‑ဉ် ≈ [i]
-  { char: 'ယ်', dev: 'ै' },   // ‑ယ် ≈ [ɛ]  (ဘယ် bè)
   // Stacked consonant combinations
   { char: '္မ', dev: '्म' },
   { char: '္က', dev: '्क' },
@@ -228,13 +224,6 @@ const STACK  = '္'; // ္  stacker
 // Nasal final consonants — a syllable ending C+ASAT with one of these is a
 // NASAL (sonorant) coda, NOT a glottal-stop / checked syllable.
 const NASAL_FINALS = new Set(['င', 'ဉ', 'ည', 'ဏ', 'န', 'မ']);
-// Vocalic finals: a killed ည/ဉ/ယ at syllable end is a VOWEL, not a coda →
-// the syllable is OPEN (low tone, and triggers voicing of the next onset).
-const VOCALIC_FINALS = new Set(['ည', 'ဉ', 'ယ']);
-function endsWithVocalicFinal(syl) {
-  const base = syl.endsWith(ASAT) ? syl[syl.length - 2] : '';
-  return VOCALIC_FINALS.has(base);
-}
 
 // Low-tone (tone 2) vowel signs. Short ိ ု are creaky (tone 1); their long
 // partners ီ ူ and the open signs ာ ေ are low. 'ို' is tested before bare ု.
@@ -248,7 +237,6 @@ export function isChecked(syl) {
   if (!base) return false;
   const code = base.charCodeAt(0);
   if (code < 0x1000 || code > 0x1021) return false; // vowel before asat (‑ော්)
-  if (VOCALIC_FINALS.has(base)) return false;        // ‑ည် ‑ဉ် ‑ယ် are vowels
   return !NASAL_FINALS.has(base);
 }
 
@@ -266,7 +254,7 @@ export function detectTone(syl) {
   if (syl.includes('ော'))   return syl.includes('ော' + ASAT) ? 2 : 3; // ‑ော် low, ‑ော high
   if (syl.includes('ဲ'))    return 3;                 // ‑ဲ default high
   if (LOW_SIGNS.some(s => syl.includes(s))) return 2;
-  if (hasNasalCoda(syl) || endsWithVocalicFinal(syl)) return 2; // nasal/vocalic final = low
+  if (hasNasalCoda(syl))    return 2;                 // bare nasal final = low
   return 1;                                           // bare inherent / short ိ ု = creaky
 }
 
