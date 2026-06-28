@@ -192,12 +192,9 @@ export function breakSyllables(word) {
     if (code >= 0x1000 && code <= 0x1021 && current.length > 0) {
       const next = word[i + 1];
       const nextCode = next ? next.charCodeAt(0) : 0;
-      // A base consonant opens a NEW syllable unless it is a killed coda
-      // (next is asat ် U+103A or stacker ္ U+1039) or the lower member of a
-      // stack (prev char is the stacker ္). Medials attach to their own onset.
-      const nextIsKiller = nextCode === 0x103A || nextCode === 0x1039;
-      const prevIsStacker = current[current.length - 1] === '္';
-      if (!nextIsKiller && !prevIsStacker) {
+      // Don't split if next is a medial
+      const isMedial = nextCode >= 0x103B && nextCode <= 0x103E;
+      if (!current.endsWith('်') && !isMedial) {
         syllables.push(current);
         current = ch;
         continue;
@@ -207,124 +204,4 @@ export function breakSyllables(word) {
   }
   if (current) syllables.push(current);
   return syllables;
-}
-
-// ═══ TONE + SANDHI LAYER (added) ═══
-// Source: Burmese_Characters_R005.xlsx (Vowels_tones tone columns, Intermediate
-// voicing columns L/N). Everything below is additive to the original engine.
-
-// ─── TONE DETECTION ───
-
-const ASAT   = '်'; // ်  killer / final marker
-const DOTBLW = '့'; // ့  creaky-tone dot (auk myit)
-const VISRG  = 'း'; // း  high-tone visarga (shay htoe)
-const ANUSV  = 'ံ'; // ◌ံ anusvara nasal
-const STACK  = '္'; // ္  stacker
-
-// Nasal final consonants — a syllable ending C+ASAT with one of these is a
-// NASAL (sonorant) coda, NOT a glottal-stop / checked syllable.
-const NASAL_FINALS = new Set(['င', 'ဉ', 'ည', 'ဏ', 'န', 'မ']);
-
-// Low-tone (tone 2) vowel signs. Short ိ ု are creaky (tone 1); their long
-// partners ီ ူ and the open signs ာ ေ are low. 'ို' is tested before bare ု.
-const LOW_SIGNS = ['ို', 'ာ', 'ါ', 'ီ', 'ူ', 'ေ'];
-
-// Is this syllable "checked" (ends in a stop + asat, e.g. ‑က် ‑တ် ‑ပ် ‑စ်)?
-// Nasal finals (‑န် …) and the aw-vowel ‑ော် are open/sonorant → not checked.
-export function isChecked(syl) {
-  if (!syl.endsWith(ASAT)) return false;
-  const base = syl[syl.length - 2];
-  if (!base) return false;
-  const code = base.charCodeAt(0);
-  if (code < 0x1000 || code > 0x1021) return false; // vowel before asat (‑ော්)
-  return !NASAL_FINALS.has(base);
-}
-
-function hasNasalCoda(syl) {
-  if (syl.includes(ANUSV)) return true;
-  if (syl.endsWith(ASAT) && NASAL_FINALS.has(syl[syl.length - 2])) return true;
-  return false;
-}
-
-// Lexical tone of one syllable: 1 (creaky), 2 (low), 3 (high), 'k' (checked).
-export function detectTone(syl) {
-  if (syl.includes(DOTBLW)) return 1;                 // ့  creaky always wins
-  if (syl.includes(VISRG))  return 3;                 // း  high
-  if (isChecked(syl))       return 'k';               // glottal-stop syllable
-  if (syl.includes('ော'))   return syl.includes('ော' + ASAT) ? 2 : 3; // ‑ော် low, ‑ော high
-  if (syl.includes('ဲ'))    return 3;                 // ‑ဲ default high
-  if (LOW_SIGNS.some(s => syl.includes(s))) return 2;
-  if (hasNasalCoda(syl))    return 2;                 // bare nasal final = low
-  return 1;                                           // bare inherent / short ိ ု = creaky
-}
-
-// ─── SANDHI VOICING ───
-// onset Burmese cluster → { plain, voiced } Devanagari. Defaults follow the
-// xlsx (Intermediate L/N) plus the regular-rule additions ဖ→ब, ကျ/ချ→ज, သ→ध.
-// Edit here to change voicing output.
-const VOICING = [
-  { on: 'ကျ', plain: 'च', voiced: 'ज' },
-  { on: 'ကြ', plain: 'च', voiced: 'ज' },
-  { on: 'ချ', plain: 'छ', voiced: 'ज' },
-  { on: 'ခြ', plain: 'छ', voiced: 'ज' },
-  { on: 'က',  plain: 'क', voiced: 'ग' },
-  { on: 'ခ',  plain: 'ख', voiced: 'ग' },
-  { on: 'စ',  plain: 'स', voiced: 'ज़' }, // /s/ → /z/  (xlsx used झ)
-  { on: 'ဆ',  plain: 'स', voiced: 'ज़' },
-  { on: 'တ',  plain: 'त', voiced: 'द' },
-  { on: 'ထ',  plain: 'थ', voiced: 'द' },
-  { on: 'ပ',  plain: 'प', voiced: 'ब' },
-  { on: 'ဖ',  plain: 'फ', voiced: 'ब' }, // /pʰ/ → /b/  (xlsx left फ)
-  { on: 'သ',  plain: 'थ', voiced: 'ध' }, // /θ/ → /ð/   (approx.)
-].sort((a, b) => b.on.length - a.on.length);
-
-function matchOnset(syl) {
-  for (const v of VOICING) if (syl.startsWith(v.on)) return v;
-  return null;
-}
-
-// ─── HIGH-LEVEL PRONUNCIATION ───
-
-const TONE_SUP = { 1: '1', 2: '2', 3: '3', k: '' };
-
-// Analyse one orthographic word → [{ burmese, dev, tone, checked, voiced }].
-export function analyzeWord(word, { sandhi = true, loanword = false } = {}) {
-  const syls = breakSyllables(word);
-  const out = [];
-  let prevTriggers = false; // previous syllable open/nasal → voices this onset
-  for (let i = 0; i < syls.length; i++) {
-    const syl = syls[i];
-    let dev = toDev(syl, loanword);
-    const tone = detectTone(syl);
-    const checked = tone === 'k';
-    let voiced = false;
-    if (sandhi && prevTriggers) {
-      const m = matchOnset(syl);
-      if (m && dev.startsWith(m.plain)) {
-        dev = m.voiced + dev.slice(m.plain.length);
-        voiced = true;
-      }
-    }
-    out.push({ burmese: syl, dev, tone, checked, voiced });
-    prevTriggers = !checked; // checked (glottal stop) blocks next-onset voicing
-  }
-  return out;
-}
-
-// Full Devanagari pronunciation string.
-// opts: { sandhi=true, tones=true, loanword=false, sep='' }
-export function toPronunciation(burmese, opts = {}) {
-  const { sandhi = true, tones = true, loanword = false, sep = '' } = opts;
-  if (!burmese) return '';
-  const tokens = burmese.split(/(\s+|[။၊])/); // never voice across a boundary
-  let result = '';
-  for (const tok of tokens) {
-    if (!tok) continue;
-    if (/^\s+$/.test(tok) || tok === '။' || tok === '၊') { result += tok; continue; }
-    const parts = analyzeWord(tok, { sandhi, loanword }).map(s =>
-      tones && s.tone !== 'k' ? s.dev + TONE_SUP[s.tone] : s.dev
-    );
-    result += parts.join(sep);
-  }
-  return result;
 }
