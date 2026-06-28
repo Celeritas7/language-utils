@@ -4,6 +4,7 @@
 
 // ─── CHARACTER TABLES ───
 
+
 const CONSONANTS = [
   { char: 'က', roman: 'ka', dev: 'क' },
   { char: 'ခ', roman: 'kha', dev: 'ख' },
