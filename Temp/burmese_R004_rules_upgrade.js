@@ -94,7 +94,6 @@ const COMBINATIONS = [
   { char: 'ိုင်', dev: 'ैंग्' },
   { char: 'ောက်', dev: 'ौक्' },
   { char: 'ိုက်', dev: 'ैक्' },
-  { char: 'ော်', dev: 'ो' },   // "aw" vowel — asat is part of the vowel, not a virama
   { char: 'ုံ', dev: 'ुं' },
   { char: 'ိန်', dev: 'िन्' },
   { char: 'ိမ်', dev: 'िम्' },
