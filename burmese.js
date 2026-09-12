@@ -109,3 +109,6 @@ export function breakSyllables(word) {
   if (current) syllables.push(current);
   return syllables;
 }
+
+// Back-compat alias for older callers
+export const toPronunciation = toDev;
