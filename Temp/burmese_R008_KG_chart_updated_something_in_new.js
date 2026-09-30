@@ -1,0 +1,121 @@
+// ═══ BURMESE TRANSLITERATION ENGINE ═══
+// Single source of truth for Burmese → Devanagari conversion
+// Uses longest-match-first algorithm
+// R007: handles stacking mark ္ (U+1039), kinzi င်္, great-sa ဿ; tone marks no longer emit digits.
+
+const CM = { // Consonant Map
+  'က':'क','ခ':'ख','ဂ':'ग','ဃ':'घ','င':'ङ',
+  'စ':'च','ဆ':'छ','ဇ':'ज','ဈ':'झ','ည':'ञ',
+  'ဋ':'ट','ဌ':'ठ','ဍ':'ड','ဎ':'ढ','ဏ':'ण',
+  'တ':'त','ထ':'थ','ဒ':'द','ဓ':'ध','န':'न',
+  'ပ':'प','ဖ':'फ','ဗ':'ब','ဘ':'भ','မ':'म',
+  'ယ':'य','ရ':'र','လ':'ल','ဝ':'व','သ':'थ',
+  'ဟ':'ह','ဠ':'ळ','အ':'अ','ဿ':'थ्थ'
+};
+
+const CC = { // Conjunct Clusters
+  'ကျ':'क्य','ကြ':'क्र','ကွ':'क्व','ကျွ':'क्य्व',
+  'ချ':'ख्य','ခြ':'ख्र','ခွ':'ख्व',
+  'ဂျ':'ग्य','ဂြ':'ग्र','ဂွ':'ग्व',
+  'စျ':'च्य','ဆွ':'छ्व',
+  'တျ':'त्य','တြ':'त्र','တွ':'त्व',
+  'ထွ':'थ्व','ဒွ':'द्व',
+  'ပျ':'प्य','ပြ':'प्र','ပွ':'प्व',
+  'ဖျ':'फ्य','ဖြ':'फ्र',
+  'ဗျ':'ब्य','ဗြ':'ब्र','ဗွ':'ब्व',
+  'ဘျ':'भ्य','ဘွ':'भ्व',
+  'မျ':'म्य','မြ':'म्र','မွ':'म्व',
+  'လျ':'ल्य','လွ':'ल्व',
+  'သျ':'थ्य','သြ':'थ्र','သွ':'थ्व',
+  'ဟွ':'ह्व','ရွ':'र्व',
+  'ကြွ':'क्र्व','ချွ':'ख्य्व','ပြွ':'प्र्व','မြွ':'म्र्व',
+  // Medial ha ှ (stored after the consonant): voiceless / sh sounds
+  'ရှ':'श','ယှ':'श','လျှ':'श','မှ':'ह्म','နှ':'ह्न','လှ':'ह्ल','ငှ':'ह्ङ','ညှ':'ह्ञ','ဝှ':'ह्व',
+  'ှ':'ह'
+};
+
+const VM = { // Vowel Map
+  'ာ':'ा','ါ':'ा','ိ':'ि','ီ':'ी','ု':'ु','ူ':'ू',
+  'ေ':'े','ဲ':'ै','ော':'ो','ို':'ो',
+  'ံ':'ं','်':'्',
+  'ွန်':'ून्','ွတ်':'ुत्','ွပ':'ुप','ွက်':'ुक्',
+  'ိုက်':'ाइक्','ည်':'ी','ိုင်':'ाइन्','ောင်':'ाउन्','ောက်':'ाउक्',
+  // Stacking
+  'င်္':'ं',   // kinzi — nasal carried onto the next (stacked) consonant
+  '္':'्',     // stacking mark — lower consonant joins as a conjunct
+  // Tone marks — no Devanagari equivalent; drop instead of emitting digits
+  'း':'','့':'','း':''
+};
+
+const DIGITS = { '၀':'०','၁':'१','၂':'२','၃':'३','၄':'४','၅':'५','၆':'६','၇':'७','၈':'८','၉':'९' };
+
+const OVR = { // Common overrides (colloquial voicing)
+  'မြန်မာ':'म्यन्मा','ပါ':'बा','တယ်':'दे','လဲ':'ले',
+  'ကြ':'क्र','ပြီ':'प्यी','ဘူး':'बू','လား':'ला',
+  'ကောင်း':'कौन्','ဟုတ်':'हुत्','ရောက်':'याउक्',
+  'ချင်':'छिन्','သွား':'थ्वा','စား':'सा'
+};
+
+// Build sorted key list (longest first) for each map
+const allKeys = {};
+for (const map of [OVR, CC, VM, CM, DIGITS]) {
+  for (const k of Object.keys(map)) {
+    allKeys[k] = map[k];
+  }
+}
+const sortedKeys = Object.keys(allKeys).sort((a, b) => b.length - a.length);
+
+export function toDev(burmese) {
+  if (!burmese) return '';
+  let result = '';
+  let i = 0;
+  const text = burmese.normalize('NFC').trim();
+
+  while (i < text.length) {
+    let matched = false;
+    for (const key of sortedKeys) {
+      if (text.startsWith(key, i)) {
+        result += allKeys[key];
+        i += key.length;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      result += text[i];
+      i++;
+    }
+  }
+  // Collapse virama doubled by asat + stacking (e.g. ်္)
+  return result.replace(/््+/g, '्');
+}
+
+// Syllable breakdown - splits a Burmese word into syllable components
+export function breakSyllables(word) {
+  if (!word) return [];
+  const syllables = [];
+  let current = '';
+
+  for (let i = 0; i < word.length; i++) {
+    const ch = word[i];
+    const code = ch.charCodeAt(0);
+
+    // Myanmar consonant range: U+1000 - U+1021 (+ ဿ U+103F)
+    if (((code >= 0x1000 && code <= 0x1021) || code === 0x103F) && current.length > 0) {
+      // A consonant followed by asat (်) or stacking mark (္) closes the previous syllable;
+      // a consonant after ္ is the stacked lower half and stays in the cluster.
+      const next = word[i + 1];
+      if (next !== '်' && next !== '္' && !current.endsWith('္')) {
+        syllables.push(current);
+        current = ch;
+        continue;
+      }
+    }
+    current += ch;
+  }
+  if (current) syllables.push(current);
+  return syllables;
+}
+
+// Back-compat alias for older callers
+export const toPronunciation = toDev;
