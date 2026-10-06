@@ -2,8 +2,8 @@
 // Tamil → Devanagari / Roman for pronunciation hints.
 // Tamil script does not mark voicing: க can be ka or ga depending on position.
 // This engine applies the standard positional rules:
-//   • word-initial or doubled (க்க)            → voiceless  क   (exception: word-initial ச → स)
-//   • after homorganic nasal (ங்க ஞ்ச ண்ட ந்த ம்ப) → voiced, explicit conjunct  ङ्ग ञ्ज ण्ड न्द म्ब
+//   • word-initial or doubled (க்க)            → voiceless  क
+//   • after homorganic nasal (ங்க ஞ்ச ண்ட ந்த ம்ப) → voiced + anusvara  ंग ंज ंड ंद ंब
 //   • after ர் ய் ழ் or between vowels           → voiced     ग स ड द ब
 //   • after any other pulli consonant (ற்க ல்க)  → voiceless  क
 // Exports: toDev(text), toRoman(text), breakSyllables(word)
@@ -72,7 +72,7 @@ const isConsonant = (ch) => !!(STOPS[ch] || CONSONANTS[ch]);
 function stopMode(text, i) {
   const ch = text[i], prev = text[i - 1], prev2 = text[i - 2];
   if (text[i + 1] === PULLI && text[i + 2] === ch) return 'hard';  // first half of a doubled stop க்க
-  if (!isTamil(prev)) return ch === 'ச' ? 'soft' : 'hard';   // word-initial (ச is /s/: சிவப்பு → सिवप्पु)
+  if (!isTamil(prev)) return 'hard';                         // word-initial
   if (prev === PULLI) {
     if (prev2 === ch) return 'hard';                         // doubled க்க
     if (prev2 === STOPS[ch].nasal) return 'nasal';           // ங்க ஞ்ச ண்ட ந்த ம்ப
@@ -112,10 +112,8 @@ function convert(input, mode) {
     }
 
     if (CONSONANTS[ch]) {
-      // Roman only: collapse nasal+pulli before homorganic stop (ங்க → ng, not ngg).
-      // Devanagari keeps the explicit conjunct (ङ्ग ञ्ज ण्ड न्द म्ब).
-      if (rom && STOPS_BY_NASAL[ch] && nasalIsAnusvara(text, i)) {
-        out += nasalRoman(ch); i += 2; continue;              // consume nasal + pulli
+      if (STOPS_BY_NASAL[ch] && nasalIsAnusvara(text, i)) {
+        out += rom ? nasalRoman(ch) : 'ं'; i += 2; continue;   // consume nasal + pulli
       }
       out += rom ? CONSONANTS[ch].rom : CONSONANTS[ch].dev;
       i++; if (rom) out += inherent(text, i); continue;
