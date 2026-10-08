@@ -1,0 +1,81 @@
+From fabcbd822b50556c6c6f5434dab5119111a913fe Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 8 Oct 2026 11:11:44 +0000
+Subject: [PATCH] Chinese: regroup consonants into palatal, retroflex and
+ dental families
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- Palatal j q x use plain letters: ज छ श (q is aspirated, so छ;
+  x was स्स).
+- Retroflex zh ch sh share the ष marker: ज्ष छ्ष ष (ch was च्ष).
+- r becomes र. ऋ is a vowel letter, so vowel signs attached to it
+  rendered as broken glyphs (肉 ròu → ऋोउ).
+- Dental z c become ज़ and त्स (were the doubled ज्ज and च्च).
+- juan/quan/xuan exceptions use the new letters and drop a halant
+  before a vowel sign that rendered as a broken glyph.
+
+Run over all 237 kg_chart Chinese words: malformed output drops from
+8 words to 0. The ü and 女儿 issues are unchanged.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01KXjaUCSTTDf8jLLkqvvVxG
+---
+ chinese.js | 26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
+
+diff --git a/chinese.js b/chinese.js
+index 3381b6f..8b1ab26 100644
+--- a/chinese.js
++++ b/chinese.js
+@@ -15,23 +15,23 @@
+ // ─── USER EXCEPTIONS — edit freely, these win over everything ───
+ const USER_EXCEPTIONS = {
+   'si': 'सु',    // 四 sì — heard as "su" (apical buzzing vowel, not "see")
+-  // 'zi': 'जु',   // dental buzz examples — uncomment / tune to taste
+-  // 'ci': 'चु',
++  // 'zi': 'ज़ु',   // dental buzz examples — uncomment / tune to taste
++  // 'ci': 'त्सु',
+   // 'shi': 'षर',  // retroflex buzz — r-coloured, not "u"
+-  // 'chi': 'छर',
+-  // 'zhi': 'जर',
+-  // 'ri':  'ऋर',
++  // 'chi': 'छ्षर',
++  // 'zhi': 'ज्षर',
++  // 'ri':  'रर',
+   // add your own below as you collect them ...
+ };
+ 
+ // ─── AUTO-PRESERVED IRREGULARS — generated from the old table; editable ───
+ const BASE_EXCEPTIONS = {
+-  'juan': 'ज्ुवन',
++  'juan': 'जुवन',
+   'jun': 'ज्विन',
+-  'quan': 'च्ुवन',
+-  'qun': 'च्विन',
+-  'xuan': 'स्स्ुवन',
+-  'xun': 'स्स्विन'
++  'quan': 'छुवन',
++  'qun': 'छ्विन',
++  'xuan': 'शुवन',
++  'xun': 'श्विन'
+ };
+ 
+ // ─── TONE MARKS (pinyin diacritics → base vowel + tone number) ───
+@@ -50,8 +50,10 @@ const INITIALS = {
+   'b': 'ब', 'p': 'फ्फ', 'm': 'म', 'f': 'फ',
+   'd': 'द', 't': 'थ', 'n': 'न', 'l': 'ल',
+   'g': 'ग', 'k': 'ख', 'h': 'ह', 'j': 'ज',
+-  'q': 'च', 'x': 'स्स', 'zh': 'ज्ष', 'ch': 'च्ष',
+-  'sh': 'ष', 'r': 'ऋ', 'z': 'ज्ज', 'c': 'च्च',
++  // Three families: palatal j q x use plain letters; retroflex zh ch sh add ष
++  // ("curl the tongue back"); dental z c s sit at the teeth. Aspirated q and ch use छ.
++  'q': 'छ', 'x': 'श', 'zh': 'ज्ष', 'ch': 'छ्ष',
++  'sh': 'ष', 'r': 'र', 'z': 'ज़', 'c': 'त्स',
+   's': 'स',
+ };
+ 
+-- 
+2.43.0
+

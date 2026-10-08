@@ -15,23 +15,23 @@
 // ─── USER EXCEPTIONS — edit freely, these win over everything ───
 const USER_EXCEPTIONS = {
   'si': 'सु',    // 四 sì — heard as "su" (apical buzzing vowel, not "see")
-  // 'zi': 'ज़ु',   // dental buzz examples — uncomment / tune to taste
-  // 'ci': 'त्सु',
+  // 'zi': 'जु',   // dental buzz examples — uncomment / tune to taste
+  // 'ci': 'चु',
   // 'shi': 'षर',  // retroflex buzz — r-coloured, not "u"
-  // 'chi': 'छ्षर',
-  // 'zhi': 'ज्षर',
-  // 'ri':  'रर',
+  // 'chi': 'छर',
+  // 'zhi': 'जर',
+  // 'ri':  'ऋर',
   // add your own below as you collect them ...
 };
 
 // ─── AUTO-PRESERVED IRREGULARS — generated from the old table; editable ───
 const BASE_EXCEPTIONS = {
-  'juan': 'जुवन',
+  'juan': 'ज्ुवन',
   'jun': 'ज्विन',
-  'quan': 'छुवन',
-  'qun': 'छ्विन',
-  'xuan': 'शुवन',
-  'xun': 'श्विन'
+  'quan': 'च्ुवन',
+  'qun': 'च्विन',
+  'xuan': 'स्स्ुवन',
+  'xun': 'स्स्विन'
 };
 
 // ─── TONE MARKS (pinyin diacritics → base vowel + tone number) ───
@@ -50,10 +50,8 @@ const INITIALS = {
   'b': 'ब', 'p': 'फ्फ', 'm': 'म', 'f': 'फ',
   'd': 'द', 't': 'थ', 'n': 'न', 'l': 'ल',
   'g': 'ग', 'k': 'ख', 'h': 'ह', 'j': 'ज',
-  // Three families: palatal j q x use plain letters; retroflex zh ch sh add ष
-  // ("curl the tongue back"); dental z c s sit at the teeth. Aspirated q and ch use छ.
-  'q': 'छ', 'x': 'श', 'zh': 'ज्ष', 'ch': 'छ्ष',
-  'sh': 'ष', 'r': 'र', 'z': 'ज़', 'c': 'त्स',
+  'q': 'च', 'x': 'स्स', 'zh': 'ज्ष', 'ch': 'च्ष',
+  'sh': 'ष', 'r': 'ऋ', 'z': 'ज्ज', 'c': 'च्च',
   's': 'स',
 };
 
