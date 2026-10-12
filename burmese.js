@@ -2,6 +2,7 @@
 // Single source of truth for Burmese → Devanagari conversion
 // Uses longest-match-first algorithm
 // R007: handles stacking mark ္ (U+1039), kinzi င်္, great-sa ဿ; tone marks no longer emit digits.
+// R009: independent vowels ဥ ဦ ဣ ဤ ဧ ဩ ဪ, ဉ/ဉ်, ေါ forms, ုံ → ों, kinzi → िं, अ+vowel → independent vowel, final after a killed consonant → consonant+virama.
 // R008: modern pronunciation — ရ → य, ြ medial = ျ (y), စ/ဆ → स, final nasals -န် -မ် -င် → nasalised vowel (ं),
 //        ော် → ो, -က် after inherent a → ेक्, ိ before a stacked consonant → े.
 //        Velar + ျ/ြ is palatalised: ကျ/ကြ → च, ချ/ခြ → छ, ဂျ/ဂြ → ज (ကျောင်း → चाउं).
@@ -13,7 +14,8 @@ const CM = { // Consonant Map
   'တ':'त','ထ':'थ','ဒ':'द','ဓ':'ध','န':'न',
   'ပ':'प','ဖ':'फ','ဗ':'ब','ဘ':'भ','မ':'म',
   'ယ':'य','ရ':'य','လ':'ल','ဝ':'व','သ':'थ',
-  'ဟ':'ह','ဠ':'ळ','အ':'अ','ဿ':'थ्थ'
+  'ဟ':'ह','ဠ':'ळ','အ':'अ','ဿ':'थ्थ','ဉ':'ञ',
+  'ဣ':'इ','ဤ':'ई','ဥ':'उ','ဦ':'ऊ','ဦ':'ऊ','ဧ':'ए','ဩ':'ओ','ဪ':'औ'
 };
 
 const CC = { // Conjunct Clusters
@@ -34,7 +36,9 @@ const CC = { // Conjunct Clusters
   'ကြွ':'च्व','ချွ':'छ्व','ပြွ':'प्य्व','မြွ':'म्य्व',
   // Medial ha ှ (stored after the consonant): voiceless / sh sounds
   'ရှ':'श','ယှ':'श','လျှ':'श','မှ':'ह्म','နှ':'ह्न','လှ':'ह्ल','ငှ':'ह्ङ','ညှ':'ह्ञ','ဝှ':'ह्व',
-  'ှ':'ह'
+  'ှ':'ह',
+  // Medial wa on any other consonant; ရွှ = shw
+  'ရွှ':'श्व','ွ':'्व'
 };
 
 const VM = { // Vowel Map
@@ -47,12 +51,23 @@ const VM = { // Vowel Map
   'န်':'ं','မ်':'ं','ိန်':'ें','ိမ်':'ें','ုန်':'ों','ုမ်':'ों','င်':'िं','ောင်':'ाउं','ိုင်':'ाइं',
   // ော + asat (လိမ္မော်) is just the vowel ो
   'ော်':'ो',
+  // ေ + tall ါ behaves like ော
+  'ေါ':'ो','ေါ်':'ो','ေါက်':'ाउक्','ေါင်':'ाउं',
+  'ုံ':'ों',
+  // ဉ် (and ဥ် typed in its place) is the final -in (ချဉ် → छिं)
+  'ဉ်':'िं','ဥ်':'िं','ာဉ်':'िं',
+  // Final -ယ် is the open vowel /ɛ/ (ဘယ် → भै); ိတ်/ိပ် = /eɪʔ/, ုတ်/ုပ် = /oʊʔ/
+  'ယ်':'ै','ိတ်':'ेत्','ိပ်':'ेप्','ုတ်':'ोत्','ုပ်':'ोप्',
+  // Creaky-tone finals (dot below sits before asat after NFC): same vowel as the plain final
+  'န့်':'ं','မ့်':'ं','င့်':'िं','ုန့်':'ों','ိန့်':'ें','ောင့်':'ाउं','ိုင့်':'ाइं',
+  // Punctuation
+  '။':'','၊':'',
   // Glottal-stop finals: -က် after inherent a is /ɛʔ/ (အနက် → अनेक्); ိက် /eɪʔ/, ုက် /oʊʔ/
   'က်':'ेक्','ိက်':'ेक्','ုက်':'ोक्',
   // ိ before a stacked consonant is /eɪ/ → े (လိမ္မော် → लेम्मो)
   'ိက္':'ेक्','ိစ္':'ेस्','ိတ္':'ेत्','ိဒ္':'ेद्','ိန္':'ेन्','ိပ္':'ेप्','ိမ္':'ेम्',
   // Stacking
-  'င်္':'ं',   // kinzi — nasal carried onto the next (stacked) consonant
+  'င်္':'िं',   // kinzi — nasal carried onto the next (stacked) consonant
   '္':'्',     // stacking mark — lower consonant joins as a conjunct
   // Tone marks — no Devanagari equivalent; drop instead of emitting digits
   'း':'','့':''
@@ -63,7 +78,7 @@ const DIGITS = { '၀':'०','၁':'१','၂':'२','၃':'३','၄':'४','�
 const OVR = { // Common overrides (colloquial voicing)
   'မြန်မာ':'म्यन्मा','ပါ':'बा','တယ်':'दे','လဲ':'ले',
   'ပြီ':'प्यी','ဘူး':'बू','လား':'ला',
-  'ကောင်း':'काउं','ဟုတ်':'हुत्','ရောက်':'याउक्',
+  'ကောင်း':'काउं','ဟုတ်':'होत्','ရောက်':'याउक्',
   'ချင်':'छिं','သွား':'थ्वा','စား':'सा'
 };
 
@@ -86,7 +101,10 @@ export function toDev(burmese) {
     let matched = false;
     for (const key of sortedKeys) {
       if (text.startsWith(key, i)) {
-        result += allKeys[key];
+        let out = allKeys[key];
+        // A final right after a killed consonant (ကပ်စ်) or an explicit vowel (ဆော့စ်) is just that consonant, killed
+        if (key.length === 2 && key[1] === '်' && CM[key[0]] && /[्ािीुूेैोौ]$/.test(result)) out = CM[key[0]] + '्';
+        result += out;
         i += key.length;
         matched = true;
         break;
@@ -98,7 +116,10 @@ export function toDev(burmese) {
     }
   }
   // Collapse virama doubled by asat + stacking (e.g. ်္)
-  return result.replace(/््+/g, '्');
+  return result
+    .replace(/््+/g, '्')
+    .replace(/अ([ािीुूेैोौ])/g, (m, v) => ({'ा':'आ','ि':'इ','ी':'ई','ु':'उ','ू':'ऊ','े':'ए','ै':'ऐ','ो':'ओ','ौ':'औ'})[v])
+    .replace(/्(?=[ािीुूेैोौ])/g, '');
 }
 
 // Syllable breakdown - splits a Burmese word into syllable components
