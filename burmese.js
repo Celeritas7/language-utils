@@ -6,6 +6,7 @@
 // R008: modern pronunciation — ရ → य, ြ medial = ျ (y), စ/ဆ → स, final nasals -န် -မ် -င် → nasalised vowel (ं),
 //        ော် → ो, -က် after inherent a → ेक्, ိ before a stacked consonant → े.
 //        Velar + ျ/ြ is palatalised: ကျ/ကြ → च, ချ/ခြ → छ, ဂျ/ဂြ → ज (ကျောင်း → चाउं).
+// R011: sandhi (voicing) restored in toPronunciation — see sandhi() below. toDev stays letter-by-letter.
 
 const CM = { // Consonant Map
   'က':'क','ခ':'ख','ဂ':'ग','ဃ':'घ','င':'ङ',
@@ -78,6 +79,7 @@ const DIGITS = { '၀':'०','၁':'१','၂':'२','၃':'३','၄':'४','�
 const OVR = { // Common overrides (colloquial voicing)
   'မြန်မာ':'म्यन्मा','ပါ':'बा','တယ်':'दे','လဲ':'ले',
   'ပြီ':'प्यी','ဘူး':'बू','လား':'ला',
+  'ဒယ်':'दे',   // voiced တယ် (after sandhi) keeps the same colloquial vowel
   'ကောင်း':'काउं','ဟုတ်':'होत्','ရောက်':'याउक्',
   'ချင်':'छिं','သွား':'थ्वा','စား':'सा'
 };
@@ -149,5 +151,49 @@ export function breakSyllables(word) {
   return syllables;
 }
 
-// Back-compat alias for older callers
-export const toPronunciation = toDev;
+// ═══ SANDHI (voicing) ═══
+// Inside a word, a syllable's voiceless initial becomes voiced when the syllable before it
+// ends in a vowel or nasal: ပင်ပန်းတယ် → ပင်ဗန်းဒယ် → पिंबंदे, ဒါ လုံချည်ပါ → … जीबा.
+// Not voiced: the first syllable of a word, after a glottal-stop final (-က် -စ် -တ် -ပ်),
+// after the prefixes မ (negation) / အ, or when the consonant carries medial ha (ှ).
+// Words are space-separated chunks; voicing never crosses a space.
+const VOICE = { 'က':'ဂ','ခ':'ဂ','စ':'ဇ','ဆ':'ဇ','တ':'ဒ','ထ':'ဒ','ပ':'ဗ','ဖ':'ဗ','သ':'ဒ' };
+const STOP_FINAL = /[ကစတပ]့?်[့း]*$/;
+const NO_VOICE_AFTER = new Set(['မ', 'အ']);
+const NO_SANDHI = new Set([]);   // whole words that must stay unvoiced (add as found)
+const isCons = ch => { const c = ch.charCodeAt(0); return (c >= 0x1000 && c <= 0x1021) || c === 0x103F; };
+
+// Like breakSyllables, but keeps creaky finals (န့် — dot below before asat) inside their syllable.
+function sylls(w) {
+  const out = []; let cur = '';
+  for (let i = 0; i < w.length; i++) {
+    const ch = w[i];
+    if (isCons(ch) && cur) {
+      let j = i + 1; while (w[j] === '့') j++;
+      if (w[j] !== '်' && w[j] !== '္' && !cur.endsWith('္')) { out.push(cur); cur = ch; continue; }
+    }
+    cur += ch;
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+
+export function sandhi(burmese) {
+  if (!burmese) return '';
+  return burmese.normalize('NFC').split(/(\s+)/).map(word => {
+    if (!word.trim() || NO_SANDHI.has(word)) return word;
+    const s = sylls(word);
+    for (let i = 1; i < s.length; i++) {
+      const v = VOICE[s[i][0]], prev = s[i - 1];
+      if (!v || /^.[ျြွ]*ှ/.test(s[i]) || STOP_FINAL.test(prev) || NO_VOICE_AFTER.has(prev)) continue;
+      s[i] = v + s[i].slice(1);
+    }
+    return s.join('');
+  }).join('');
+}
+
+// What the app shows on the pronunciation line: spoken form, with voicing.
+// Pass { sandhi: false } for the literal letter-by-letter reading (same as toDev).
+export function toPronunciation(burmese, opts = {}) {
+  return toDev(opts.sandhi === false ? burmese : sandhi(burmese));
+}
