@@ -1,12 +1,13 @@
 // ═══ MARATHI TRANSLITERATION ENGINE ═══
 // Marathi is written in Devanagari, so toDev() returns the text unchanged (NFC only).
-// toRoman() gives a readable romanisation with Marathi pronunciation rules:
+// toRoman() gives a plain spelling for readers of Filipino or English (no accent marks: manjar, mangalvar,
+// teksi; ng/ny/sh; f for फ). toRomanStrict() keeps the marks (mānjar, maṅgaḷvār, ṭæksī). Both use Marathi rules:
 //   • the inherent a after a word's last consonant is silent         मांजर → mānjar
 //   • a medial inherent a is silent in  V C a C V  (checked right to left) मंगळवार → maṅgaḷvār
 //   • ज्ञ is said dny, ऋ is said ru                                     ज्ञान → dnyān
 //   • ॅ / ऑ are the English vowels in "cat" / "cot"                    टॅक्सी → ṭæksī, कॉफी → kŏphī
 //   • ँ on a bare consonant is the "cat" vowel plus a nasal            सँडविच → sænḍvich
-// Exports: toDev(text), toRoman(text), breakSyllables(word)
+// Exports: toDev(text), toRoman(text), toRomanStrict(text), breakSyllables(word)
 
 const VIRAMA = '्', NUKTA = '़';
 
@@ -67,7 +68,11 @@ function tokenize(word) {
 
 const vowelish = (tok) => tok && (tok.t === 'V' || tok.t === 'a');
 
-function romanWord(word) {
+// Plain spelling, applied per token so 'ph' only ever means फ
+const PLAIN = { 'ā': 'a', 'ī': 'i', 'ū': 'u', 'ṅ': 'ng', 'ñ': 'ny', 'ṭ': 't', 'ḍ': 'd', 'ṇ': 'n', 'ḷ': 'l', 'ṣ': 's', 'æ': 'e', 'ŏ': 'o', 'ṁ': 'm', 'ṛ': 'r' };
+const plainTok = (r) => (r === 'ph' ? 'f' : r.replace(/[āīūṅñṭḍṇḷṣæŏṁṛ]/g, c => PLAIN[c]));
+
+function romanWord(word, plain) {
   const toks = tokenize(word);
   // word-final inherent a is silent (a one-letter word like न keeps it)
   const consonants = toks.filter(t => t.t === 'C').length;
@@ -86,25 +91,27 @@ function romanWord(word) {
     const nextV = toks[j];
     if (prevC.t === 'C' && vowelish(prevV) && !prevV.drop && nextC && nextC.t === 'C' && toks[i + 2] && toks[i + 2].t !== 'C' && vowelish(nextV) && !nextV.drop) t.drop = true;
   }
+  const out = plain ? plainTok : (r) => r;
   let s = '';
   toks.forEach((t, i) => {
     if (t.t === 'a') { if (!t.drop) s += 'a'; return; }
     if (t.t === 'N') {
       const nx = toks[i + 1];
-      s += nx && nx.t === 'C' ? (NASAL_BEFORE[nx.r] || 'n') : 'ṁ';
+      s += out(nx && nx.t === 'C' ? (NASAL_BEFORE[nx.r] || 'n') : 'ṁ');
       return;
     }
-    s += t.r;
+    s += out(t.r);
   });
   return s;
 }
 
-function mrRoman(text) {
-  return (text || '').normalize('NFC').replace(/[ऀ-ॿ‌‍]+/g, w => romanWord(w));
+function mrRoman(text, plain) {
+  return (text || '').normalize('NFC').replace(/[ऀ-ॿ‌‍]+/g, w => romanWord(w, plain));
 }
 
 export function toDev(text) { return (text || '').normalize('NFC'); }
-export function toRoman(text) { return mrRoman(text); }
+export function toRoman(text) { return mrRoman(text, true); }
+export function toRomanStrict(text) { return mrRoman(text, false); }
 export const toPronunciation = toRoman;
 
 // Akshara split for Build the Word: a conjunct stays in one piece (क्ष, स्त्र), vowel signs and
