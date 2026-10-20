@@ -106,7 +106,9 @@ function romanWord(word, plain) {
 }
 
 function mrRoman(text, plain) {
-  return (text || '').normalize('NFC').replace(/[ऀ-ॿ‌‍]+/g, w => romanWord(w, plain));
+  const out = (text || '').normalize('NFC').replace(/[\u0900-\u097F\u200C\u200D]+/g, w => romanWord(w, plain));
+  // Filipino spelling writes ng + g as "ngg" only before a vowel (mangga); at a word end it's just "ng" (रंग → rang)
+  return plain ? out.replace(/ngg(?![aeiou])/g, 'ng') : out;
 }
 
 export function toDev(text) { return (text || '').normalize('NFC'); }
