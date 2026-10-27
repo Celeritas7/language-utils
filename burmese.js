@@ -7,6 +7,8 @@
 //        ော် → ो, -က် after inherent a → ेक्, ိ before a stacked consonant → े.
 //        Velar + ျ/ြ is palatalised: ကျ/ကြ → च, ချ/ခြ → छ, ဂျ/ဂြ → ज (ကျောင်း → चाउं).
 // R011: sandhi (voicing) restored in toPronunciation — see sandhi() below. toDev stays letter-by-letter.
+// R012: stop finals -က် -စ် -တ် -ပ် are a glottal stop, not a consonant: written as the vowel + ʼ (အနက်ရောင် → अनेʼयाउं).
+//        A killed consonant before the next syllable used to join it (क्+या → क्या, "kyaung").
 
 const CM = { // Consonant Map
   'က':'क','ခ':'ख','ဂ':'ग','ဃ':'घ','င':'ङ',
@@ -46,25 +48,25 @@ const VM = { // Vowel Map
   'ာ':'ा','ါ':'ा','ိ':'ि','ီ':'ी','ု':'ु','ူ':'ू',
   'ေ':'े','ဲ':'ै','ော':'ो','ို':'ो',
   'ံ':'ं','်':'्',
-  'ွန်':'ुं','ွတ်':'ुत्','ွပ':'ुप','ွက်':'ुक्',
-  'ိုက်':'ाइक्','ည်':'ी','ည့်':'ी','စ်':'ित्','ောက်':'ाउक्',
+  'ွန်':'ुं','ွတ်':'ुʼ','ွပ':'ुप','ွက်':'ुʼ',
+  'ိုက်':'ाइʼ','ည်':'ी','ည့်':'ी','စ်':'िʼ','ောက်':'ाउʼ',
   // Final nasals = nasalised vowel, not a consonant
   'န်':'ं','မ်':'ं','ိန်':'ें','ိမ်':'ें','ုန်':'ों','ုမ်':'ों','င်':'िं','ောင်':'ाउं','ိုင်':'ाइं',
   // ော + asat (လိမ္မော်) is just the vowel ो
   'ော်':'ो',
   // ေ + tall ါ behaves like ော
-  'ေါ':'ो','ေါ်':'ो','ေါက်':'ाउक्','ေါင်':'ाउं',
+  'ေါ':'ो','ေါ်':'ो','ေါက်':'ाउʼ','ေါင်':'ाउं',
   'ုံ':'ों',
   // ဉ် (and ဥ် typed in its place) is the final -in (ချဉ် → छिं)
   'ဉ်':'िं','ဥ်':'िं','ာဉ်':'िं',
-  // Final -ယ် is the open vowel /ɛ/ (ဘယ် → भै); ိတ်/ိပ် = /eɪʔ/, ုတ်/ုပ် = /oʊʔ/
-  'ယ်':'ै','ိတ်':'ेत्','ိပ်':'ेप्','ုတ်':'ोत्','ုပ်':'ोप्',
+  // Final -ယ် is the open vowel /ɛ/ (ဘယ် → भै); ိတ်/ိပ် = /eɪʔ/, ုတ်/ုပ် = /oʊʔ/; -တ်/-ပ် after inherent a = /aʔ/, ာတ် too (ဓာတ်)
+  'ယ်':'ै','ိတ်':'ेʼ','ိပ်':'ेʼ','ုတ်':'ोʼ','ုပ်':'ोʼ','တ်':'ʼ','ပ်':'ʼ','ာတ်':'ाʼ',
   // Creaky-tone finals (dot below sits before asat after NFC): same vowel as the plain final
   'န့်':'ं','မ့်':'ं','င့်':'िं','ုန့်':'ों','ိန့်':'ें','ောင့်':'ाउं','ိုင့်':'ाइं',
   // Punctuation
   '။':'','၊':'',
-  // Glottal-stop finals: -က် after inherent a is /ɛʔ/ (အနက် → अनेक्); ိက် /eɪʔ/, ုက် /oʊʔ/
-  'က်':'ेक्','ိက်':'ेक्','ုက်':'ोक्',
+  // Glottal-stop finals: -က် after inherent a is /ɛʔ/ (အနက် → अनेʼ); ိက် /eɪʔ/, ုက် /oʊʔ/
+  'က်':'ेʼ','ိက်':'ेʼ','ုက်':'ोʼ',
   // ိ before a stacked consonant is /eɪ/ → े (လိမ္မော် → लेम्मो)
   'ိက္':'ेक्','ိစ္':'ेस्','ိတ္':'ेत्','ိဒ္':'ेद्','ိန္':'ेन्','ိပ္':'ेप्','ိမ္':'ेम्',
   // Stacking
@@ -80,7 +82,7 @@ const OVR = { // Common overrides (colloquial voicing)
   'မြန်မာ':'म्यन्मा','ပါ':'बा','တယ်':'दे','လဲ':'ले',
   'ပြီ':'प्यी','ဘူး':'बू','လား':'ला',
   'ဒယ်':'दे',   // voiced တယ် (after sandhi) keeps the same colloquial vowel
-  'ကောင်း':'काउं','ဟုတ်':'होत्','ရောက်':'याउक्',
+  'ကောင်း':'काउं','ဟုတ်':'होʼ','ရောက်':'याउʼ',
   'ချင်':'छिं','သွား':'थ्वा','စား':'सा'
 };
 
@@ -104,8 +106,8 @@ export function toDev(burmese) {
     for (const key of sortedKeys) {
       if (text.startsWith(key, i)) {
         let out = allKeys[key];
-        // A final right after a killed consonant (ကပ်စ်) or an explicit vowel (ဆော့စ်) is just that consonant, killed
-        if (key.length === 2 && key[1] === '်' && CM[key[0]] && /[्ािीुूेैोौ]$/.test(result)) out = CM[key[0]] + '्';
+        // A final right after another final (ကပ်စ်) or an explicit vowel (ဆော့စ်) is a loanword consonant, killed
+        if (key.length === 2 && key[1] === '်' && CM[key[0]] && /[्ािीुूेैोौʼ]$/.test(result)) out = CM[key[0]] + '्';
         result += out;
         i += key.length;
         matched = true;
