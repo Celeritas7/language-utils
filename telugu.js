@@ -1,7 +1,10 @@
 // ═══ TELUGU TRANSLITERATION ENGINE ═══
 // Character-by-character mapping, longest-match-first (same pattern as sinhala.js).
 // Telugu is phonemic — no positional voicing rules needed.
-// Exports: toDev(text), breakSyllables(word), toPronunciation (alias of toDev)
+// toRoman() gives an ISO 15919 style spelling, as in kannada.js (కుక్క kukka, ఏనుగు ēnugu, పళ్ళెం paḷḷem), with one
+//   change for Telugu: ం is spoken m at the end of a word and before y r l v ś ṣ s h, so it is written m there
+//   (అన్నం annam, సింహం simham, సంవత్సరం samvatsaram). Before k c ṭ t p it takes their nasal (రంగు raṅgu, పంది pandi).
+// Exports: toDev(text), toRoman(text), breakSyllables(word), toPronunciation (alias of toDev)
 
 const CONSONANTS = [
   { char: 'క', dev: 'क' }, { char: 'ఖ', dev: 'ख' }, { char: 'గ', dev: 'ग' }, { char: 'ఘ', dev: 'घ' }, { char: 'ఙ', dev: 'ङ' },
@@ -59,6 +62,51 @@ export function toDev(telugu) {
     if (!matched) { result += text[i]; i++; }
   }
   return result;
+}
+
+// ─── ROMAN (ISO 15919 style, final a kept) ───
+const R_CONS = {
+  'క': 'k', 'ఖ': 'kh', 'గ': 'g', 'ఘ': 'gh', 'ఙ': 'ṅ', 'చ': 'c', 'ఛ': 'ch', 'జ': 'j', 'ఝ': 'jh', 'ఞ': 'ñ',
+  'ట': 'ṭ', 'ఠ': 'ṭh', 'డ': 'ḍ', 'ఢ': 'ḍh', 'ణ': 'ṇ', 'త': 't', 'థ': 'th', 'ద': 'd', 'ధ': 'dh', 'న': 'n',
+  'ప': 'p', 'ఫ': 'ph', 'బ': 'b', 'భ': 'bh', 'మ': 'm', 'య': 'y', 'ర': 'r', 'ఱ': 'ṟ', 'ల': 'l', 'ళ': 'ḷ', 'ఴ': 'ḻ',
+  'వ': 'v', 'శ': 'ś', 'ష': 'ṣ', 'స': 's', 'హ': 'h', 'ౘ': 'ts', 'ౙ': 'dz',
+};
+const R_VOW = { 'అ': 'a', 'ఆ': 'ā', 'ఇ': 'i', 'ఈ': 'ī', 'ఉ': 'u', 'ఊ': 'ū', 'ఋ': 'r̥', 'ౠ': 'r̥̄', 'ఎ': 'e', 'ఏ': 'ē', 'ఐ': 'ai', 'ఒ': 'o', 'ఓ': 'ō', 'ఔ': 'au' };
+const R_SIGN = { 'ా': 'ā', 'ి': 'i', 'ీ': 'ī', 'ు': 'u', 'ూ': 'ū', 'ృ': 'r̥', 'ౄ': 'r̥̄', 'ె': 'e', 'ే': 'ē', 'ై': 'ai', 'ొ': 'o', 'ో': 'ō', 'ౌ': 'au' };
+const R_VIRAMA = '్', R_NUKTA = '఼';
+const R_NASAL = { k: 'ṅ', kh: 'ṅ', g: 'ṅ', gh: 'ṅ', c: 'ñ', ch: 'ñ', j: 'ñ', jh: 'ñ', 'ṭ': 'ṇ', 'ṭh': 'ṇ', 'ḍ': 'ṇ', 'ḍh': 'ṇ',
+  t: 'n', th: 'n', d: 'n', dh: 'n', n: 'n', p: 'm', ph: 'm', b: 'm', bh: 'm', m: 'm' };
+
+export function toRoman(text) {
+  const chars = Array.from((text || '').normalize('NFC'));
+  let out = '';
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    if (R_CONS[ch]) {
+      let r = R_CONS[ch];
+      if (chars[i + 1] === R_NUKTA) { r = { 'జ': 'z', 'ఫ': 'f' }[ch] || r; i++; }
+      out += r;
+      const nx = chars[i + 1];
+      if (nx === R_VIRAMA) { i++; continue; }
+      if (R_SIGN[nx]) { out += R_SIGN[nx]; i++; continue; }
+      out += 'a';
+      continue;
+    }
+    if (R_VOW[ch]) { out += R_VOW[ch]; continue; }
+    if (ch === 'ం') {
+      // anusvara takes the nasal of the next stop (k c ṭ t p groups); m everywhere else, as it is spoken
+      const nx = chars[i + 1];
+      out += (R_CONS[nx] && R_NASAL[R_CONS[nx]]) || 'm';
+      continue;
+    }
+    if (ch === 'ఁ' || ch === 'ఀ') { out += 'm̐'; continue; }   // arasunna / candrabindu (old spellings)
+    if (ch === 'ః') { out += 'ḥ'; continue; }
+    if (ch === '\u200C' || ch === '\u200D') continue;      // ZWNJ / ZWJ only change the shape
+    const c = ch.codePointAt(0);
+    if (c >= 0x0C66 && c <= 0x0C6F) { out += String(c - 0x0C66); continue; }
+    out += ch;
+  }
+  return out;
 }
 
 // ─── SYLLABLE BREAKDOWN ───
