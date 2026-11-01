@@ -1,7 +1,7 @@
 // ═══ MARATHI TRANSLITERATION ENGINE ═══
 // Marathi is written in Devanagari, so toDev() returns the text unchanged (NFC only).
 // toRoman() gives a plain spelling for readers of Filipino or English (no accent marks: manjar, mangalvar,
-// teksi; ng/ny/sh; f for फ). toRomanStrict() keeps the marks (mānjar, maṅgaḷvār, ṭæksī). Both use Marathi rules:
+// sanga, teksi; ng/ny/sh; f for फ; a nasal before k/kh/g/gh is plain n, so सांगा → sanga, not sangga). toRomanStrict() keeps the marks (mānjar, maṅgaḷvār, ṭæksī). Both use Marathi rules:
 //   • the inherent a after a word's last consonant is silent         मांजर → mānjar
 //   • a medial inherent a is silent in  V C a C V  (checked right to left) मंगळवार → maṅgaḷvār
 //   • ज्ञ is said dny, ऋ is said ru                                     ज्ञान → dnyān
@@ -97,7 +97,10 @@ function romanWord(word, plain) {
     if (t.t === 'a') { if (!t.drop) s += 'a'; return; }
     if (t.t === 'N') {
       const nx = toks[i + 1];
-      s += out(nx && nx.t === 'C' ? (NASAL_BEFORE[nx.r] || 'n') : 'ṁ');
+      const nasal = nx && nx.t === 'C' ? (NASAL_BEFORE[nx.r] || 'n') : 'ṁ';
+      // Plain: before k/kh/g/gh the nasal is just n (the g or k that follows already gives the "ng" sound):
+      // सांगा → sanga, मंगळवार → mangalvar, पंखा → pankha. Strict keeps ṅ (sāṅgā).
+      s += plain && nasal === 'ṅ' ? 'n' : out(nasal);
       return;
     }
     s += out(t.r);
@@ -106,9 +109,7 @@ function romanWord(word, plain) {
 }
 
 function mrRoman(text, plain) {
-  const out = (text || '').normalize('NFC').replace(/[\u0900-\u097F\u200C\u200D]+/g, w => romanWord(w, plain));
-  // Filipino spelling writes ng + g as "ngg" only before a vowel (mangga); at a word end it's just "ng" (रंग → rang)
-  return plain ? out.replace(/ngg(?![aeiou])/g, 'ng') : out;
+  return (text || '').normalize('NFC').replace(/[\u0900-\u097F\u200C\u200D]+/g, w => romanWord(w, plain));
 }
 
 export function toDev(text) { return (text || '').normalize('NFC'); }
