@@ -201,7 +201,7 @@ export function sandhi(burmese) {
 // preference and must not change the general nasal/glottal-stop distinction.
 const LEARNER_PRONUNCIATION_OVERRIDES = new Map([
   ['ပီဇာ', 'पीझा'],
-  ['ဒိန်ခဲ', 'देंघै'],
+  ['ဒိန်ခဲ', 'देंघे'],
   ['ကြက်ဥ', "च'ऊ"],
   ['ဒိန်ချဥ်', "देंछ'"],
   ['ဟမ်ဘာဂါ', 'हॅभागा']
