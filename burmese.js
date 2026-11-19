@@ -194,8 +194,33 @@ export function sandhi(burmese) {
   }).join('');
 }
 
-// What the app shows on the pronunciation line: spoken form, with voicing.
-// Pass { sandhi: false } for the literal letter-by-letter reading (same as toDev).
+// Learner-reported pronunciation preferences for individual vocabulary items.
+// These are deliberately NOT changes to CM/VM or sandhi(): several are
+// approximations heard by a Devanagari-reading learner rather than productive
+// Burmese sound rules. In particular, a final apostrophe here is a display
+// preference and must not change the general nasal/glottal-stop distinction.
+const LEARNER_PRONUNCIATION_OVERRIDES = new Map([
+  ['ပီဇာ', 'पीझा'],
+  ['ဒိန်ခဲ', 'देंघै'],
+  ['ကြက်ဥ', "च'ऊ"],
+  ['ဒိန်ချဥ်', "देंछ'"],
+  ['ဟမ်ဘာဂါ', 'हॅभागा']
+]);
+
+// What the app shows on the pronunciation line: spoken form, with voicing and
+// explicit learner preferences. These overrides match complete whitespace-
+// separated words only, so unrelated words retain the general rules.
+// Pass { sandhi: false } for the literal letter-by-letter reading (same as toDev),
+// or { learnerOverrides: false } for rule-based pronunciation without preferences.
 export function toPronunciation(burmese, opts = {}) {
-  return toDev(opts.sandhi === false ? burmese : sandhi(burmese));
+  if (!burmese) return '';
+  if (opts.sandhi === false) return toDev(burmese);
+
+  const text = burmese.normalize('NFC').trim();
+  if (opts.learnerOverrides === false) return toDev(sandhi(text));
+
+  return text.split(/(\s+)/).map(word => {
+    if (!word.trim()) return word;
+    return LEARNER_PRONUNCIATION_OVERRIDES.get(word) ?? toDev(sandhi(word));
+  }).join('');
 }
