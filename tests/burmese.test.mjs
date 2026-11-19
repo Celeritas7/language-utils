@@ -13,7 +13,7 @@ const { toDev, toPronunciation, sandhi } = await import(
 
 const flaggedWords = [
   ['ပီဇာ', 'पीजा', 'पीझा'],
-  ['ဒိန်ခဲ', 'देंखै', 'देंघै'],
+  ['ဒိန်ခဲ', 'देंखै', 'देंघे'],
   ['ကြက်ဥ', 'चेʼउ', "च'ऊ"],
   ['ဒိန်ချဥ်', 'देंछिं', "देंछ'"],
   ['ဟမ်ဘာဂါ', 'हंभागा', 'हॅभागा']
@@ -32,7 +32,7 @@ for (const [burmese, literal, preferred] of flaggedWords) {
 }
 
 test('learner overrides work for complete words in spaced text', () => {
-  assert.equal(toPronunciation('  ပီဇာ  ဒိန်ခဲ  '), 'पीझा  देंघै');
+  assert.equal(toPronunciation('  ပီဇာ  ဒိန်ခဲ  '), 'पीझा  देंघे');
 });
 
 test('rule-based pronunciation remains available without learner overrides', () => {
